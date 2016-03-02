@@ -49,7 +49,15 @@ module.exports = (codepath, isAppend, cmdArgs, callback)->
   args.push cmdArgs... if cmdArgs
 
   args.push("--options=#{ctagsFile}", '--fields=+KSn', '--excmd=p')
-  args.push('-u', '-R', '-f', genPath, codepath)
+
+  fileList = atom.config.get("atom-ctags.FileList")
+
+  if fileList
+    args.push('-L', fileList)
+  else
+    args.push('-R')
+
+  args.push('-u', '-f', genPath, codepath)
 
   stderr = (data)->
     console.error("atom-ctags: command error, " + data, genPath)

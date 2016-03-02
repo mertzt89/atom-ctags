@@ -27,6 +27,10 @@ module.exports =
       description: 'Add specified ctag command args like: --exclude=lib --exclude=*.js'
       type: 'string'
       default: ""
+    FileList:
+      description: 'Use specified file list to generate tags'
+      type: 'string'
+      default: ""
     extraTagFiles:
       description: 'Add specified tagFiles. (Make sure you tag file generate with --fields=+KSn)'
       type: 'string'
