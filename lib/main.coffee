@@ -6,10 +6,6 @@ module.exports =
   disposable: null
 
   config:
-    disableComplete:
-      title: 'Disable auto complete'
-      type: 'boolean'
-      default: false
     autoBuildTagsWhenActive:
       title: 'Automatically rebuild tags'
       description: 'Rebuild tags file each time a project path changes'
@@ -43,8 +39,6 @@ module.exports =
       type: 'string'
       default: "left click"
       enum: ["left click", "middle click", "right click"]
-
-  provider: null
 
   activate: ->
     @stack = []
@@ -89,10 +83,6 @@ module.exports =
               atom-ctags replaces and enhances the symbols-view package.
               Therefore, symbols-view has been disabled."
 
-    atom.config.observe 'atom-ctags.disableComplete', =>
-      return unless @provider
-      @provider.disabled = atom.config.get('atom-ctags.disableComplete')
-
     initExtraTagsTime = null
     atom.config.observe 'atom-ctags.extraTagFiles', =>
       clearTimeout initExtraTagsTime if initExtraTagsTime
@@ -136,11 +126,3 @@ module.exports =
       GoBackView = require './go-back-view'
       @goBackView = new GoBackView(@stack)
     @goBackView
-
-  provide: ->
-    unless @provider?
-      CtagsProvider = require './ctags-provider'
-      @provider = new CtagsProvider()
-      @provider.ctagsCache = @ctagsCache
-      @provider.disabled = atom.config.get('atom-ctags.disableComplete')
-    @provider

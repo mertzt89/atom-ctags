@@ -79,7 +79,7 @@ class FileView extends SymbolsView
     if projectPaths.length < 1
       console.error "[atom-ctags:rebuild] cancel rebuild, invalid projectPath: #{projectPath}"
       return
-    @ctagsCache.cachedTags = {}
+    @ctagsCache.cachedTags = []
     @ctagsCache.generateTags projectPath for projectPath in projectPaths
 
   goto: ->
@@ -88,7 +88,7 @@ class FileView extends SymbolsView
       console.error "[atom-ctags:goto] failed getCurSymbol"
       return
 
-    tags = @ctagsCache.findTags(symbol)
+    tags = @ctagsCache.findTags symbol
 
     if tags.length is 1
       @openTag(tags[0])

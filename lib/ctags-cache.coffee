@@ -3,6 +3,9 @@ TagGenerator = require './tag-generator'
 ctags = require 'ctags'
 fs = require "fs"
 path = require "path"
+deasync = require 'deasync'
+
+findTagsSync = deasync(ctags.findTags)
 
 getTagsFile = (directoryPath) ->
   tagsFile = path.join(directoryPath, ".tags")
@@ -11,15 +14,15 @@ getTagsFile = (directoryPath) ->
 matchOpt = {matchBase: true}
 module.exports =
   activate: () ->
-    @cachedTags = {}
-    @extraTags = {}
+    @cachedTags = []
+    @extraTags = []
 
   deactivate: ->
     @cachedTags = null
 
   initTags: (paths, auto)->
     return if paths.length == 0
-    @cachedTags = {}
+    @cachedTags = []
     for p in paths
       tagsFile = getTagsFile(p)
       if tagsFile
@@ -28,56 +31,39 @@ module.exports =
         @generateTags(p) if auto
 
   initExtraTags: (paths) ->
-    @extraTags = {}
+    @extraTags = []
     for p in paths
       p = p.trim()
       continue unless p
       @readTags(p, @extraTags)
 
   readTags: (p, container, callback) ->
-    console.log "[atom-ctags:readTags] #{p} start..."
-    startTime = Date.now()
-
-    stream = ctags.createReadStream(p)
-
-    stream.on 'error', (error)->
-      console.error 'atom-ctags: ', error
-
-    stream.on 'data', (tags)->
-      for tag in tags
-        continue unless tag.pattern
-        data = container[tag.file]
-        if not data
-          data = []
-          container[tag.file] = data
-        data.push tag
-    stream.on 'end', ()->
-      console.log "[atom-ctags:readTags] #{p} cost: #{Date.now() - startTime}ms"
+      console.log "Not caching tags for stability."
+      container.push(p) if container.indexOf(p) < 0
       callback?()
 
   #options = { partialMatch: true, maxItems }
   findTags: (prefix, options) ->
     tags = []
-    return tags if @findOf(@cachedTags, tags, prefix, options)
-    return tags if @findOf(@extraTags, tags, prefix, options)
+
+    temp = @findOf @cachedTags, tags, prefix, options
+    tags = tags.concat(temp) if temp.length > 0
+    temp = @findOf @extraTags, tags, prefix, options
+    tags = tags.concat(temp) if temp.length > 0
 
     #TODO: prompt in editor
     console.warn("[atom-ctags:findTags] tags empty, did you RebuildTags or set extraTagFiles?") if tags.length == 0
+
     return tags
 
-  findOf: (source, tags, prefix, options)->
-    for key, value of source
-      for tag in value
-        if options?.partialMatch and tag.name.indexOf(prefix) == 0
-            tags.push tag
-        else if tag.name == prefix
-          tags.push tag
-        return true if options?.maxItems and tags.length == options.maxItems
-    return false
+  findOf: (source, tags, prefix, options, callback)->
+    temp = []
+    for tagpath in source
+      temp = temp.concat(findTagsSync tagpath, prefix, options)
+
+    return temp
 
   generateTags:(p, isAppend, callback) ->
-    delete @cachedTags[p]
-
     startTime = Date.now()
     console.log "[atom-ctags:rebuild] start @#{p}@ tags..."
 
