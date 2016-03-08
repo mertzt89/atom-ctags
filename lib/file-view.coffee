@@ -8,9 +8,10 @@ class FileView extends SymbolsView
 
     @editorsSubscription = atom.workspace.observeTextEditors (editor) =>
       disposable = editor.onDidSave =>
-        f = editor.getPath()
-        return unless atom.project.contains(f)
-        @ctagsCache.generateTags(f, true)
+        if atom.config.get('atom-ctags.buildTagsOnSave')
+          f = editor.getPath()
+          return unless atom.project.contains(f)
+          @ctagsCache.generateTags(f, false)
 
       editor.onDidDestroy -> disposable.dispose()
 

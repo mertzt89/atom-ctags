@@ -11,6 +11,11 @@ module.exports =
       description: 'Rebuild tags file each time a project path changes'
       type: 'boolean'
       default: false
+    buildTagsOnSave:
+      title: 'Rebuild tags on save'
+      description: 'Rebuild tags file each time a file is saved. NOTE: This feature does not work properly if using a file list!'
+      type: 'boolean'
+      default: false
     buildTimeout:
       title: 'Build timeout'
       description: 'Time (in milliseconds) to wait for a tags rebuild to finish'
