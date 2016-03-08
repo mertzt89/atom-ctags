@@ -3,9 +3,7 @@ TagGenerator = require './tag-generator'
 ctags = require 'ctags'
 fs = require "fs"
 path = require "path"
-deasync = require 'deasync'
-
-findTagsSync = deasync(ctags.findTags)
+async = require 'async'
 
 getTagsFile = (directoryPath) ->
   tagsFile = path.join(directoryPath, ".tags")
@@ -43,25 +41,18 @@ module.exports =
       callback?()
 
   #options = { partialMatch: true, maxItems }
-  findTags: (prefix, options) ->
-    tags = []
+  findTags: (prefix, options, callback) ->
+    items = []
+    items.push({'path': path, 'prefix': prefix, 'options': options}) for path in @cachedTags
+    items.push({'path': path, 'prefix': prefix, 'options': options}) for path in @extraTags
 
-    temp = @findOf @cachedTags, tags, prefix, options
-    tags = tags.concat(temp) if temp.length > 0
-    temp = @findOf @extraTags, tags, prefix, options
-    tags = tags.concat(temp) if temp.length > 0
+    async.concat items, @findOf, (error, tags) ->
+      #TODO: prompt in editor
+      console.warn("[atom-ctags:findTags] tags empty, did you RebuildTags or set extraTagFiles?") if tags.length == 0
+      callback error, tags
 
-    #TODO: prompt in editor
-    console.warn("[atom-ctags:findTags] tags empty, did you RebuildTags or set extraTagFiles?") if tags.length == 0
-
-    return tags
-
-  findOf: (source, tags, prefix, options, callback)->
-    temp = []
-    for tagpath in source
-      temp = temp.concat(findTagsSync tagpath, prefix, options)
-
-    return temp
+  findOf: (config, callback)->
+    ctags.findTags config.path, config.prefix, config.options, callback
 
   generateTags:(p, isAppend, callback) ->
     startTime = Date.now()

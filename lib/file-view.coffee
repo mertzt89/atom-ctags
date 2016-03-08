@@ -84,18 +84,19 @@ class FileView extends SymbolsView
     @ctagsCache.generateTags projectPath for projectPath in projectPaths
 
   goto: ->
+    self = @
     symbol = @getCurSymbol()
     if not symbol
       console.error "[atom-ctags:goto] failed getCurSymbol"
       return
 
-    tags = @ctagsCache.findTags symbol
+    @ctagsCache.findTags symbol, {}, (error, tags) ->
 
-    if tags.length is 1
-      @openTag(tags[0])
-    else
-      @setItems(tags)
-      @attach()
+      if tags.length is 1
+        self.openTag(tags[0])
+      else
+        self.setItems(tags)
+        self.attach()
 
   populate: (filePath) ->
     @list.empty()
